@@ -6,6 +6,7 @@ import * as O from "fp-ts/lib/Option";
 import * as RA from "fp-ts/lib/ReadonlyArray";
 import * as Str from "fp-ts/lib/string";
 import * as TE from "fp-ts/lib/TaskEither";
+
 import {
 	App,
 	FileSystemAdapter,
@@ -19,6 +20,7 @@ import {
 	Vault,
 	Workspace,
 } from "obsidian";
+import { resolve } from "path";
 
 interface Settings {
 	url: string;
@@ -51,7 +53,7 @@ const log =
 		return a;
 	};
 
-export default class IpfsPublisher extends Plugin {
+export default class IpfsFluencePublishPlugin extends Plugin {
 	settings: Settings;
 
 	async onload() {
@@ -59,6 +61,13 @@ export default class IpfsPublisher extends Plugin {
 
 		const adapter = this.app.vault.adapter as FileSystemAdapter;
 		const basePath = adapter.getBasePath();
+
+		// probeer hello trisolarian als deployed on network
+		// vraag is of dat kan met fluence cli .. zonder in de juiste folder te zitten
+		// goede args met absolute paths? 
+
+		var platform = require('platform');
+		console.log(platform);
 
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
@@ -78,6 +87,7 @@ export default class IpfsPublisher extends Plugin {
 								log("Adding note..."),
 								TE.fromNullable(new Error("File not found")),
 								TE.chain(publishFile(this.app.workspace, this.app.vault, url, token)),
+								TE.chain(callToRender()),
 								// TE.chain(insertCid(this.app.workspace)),
 								TE.match(
 									(e) => notify(e, "File failed to publish"),
@@ -103,7 +113,48 @@ export default class IpfsPublisher extends Plugin {
 	}
 }
 
+const render = async (cid: string, author: string, publication: string) => {
 
+	return new Promise( (resolve, reject) => {
+	
+		const spawn = require('child-process-promise').spawn;
+		const exec = require('child-process-promise').exec;
+		const path = "/home/joera/Documents/transport-union/fluence_sg/fluence";
+		
+		const keypair = "D8i82mJlX4SI2h7Ar+AK2csf3ZhYvtkwmSSuaWrR5Ng=";
+		const aquaPath = "/home/joera/Documents/transport-union/fluence_sg/fluence/src/aqua/main.aqua";
+		const relay = "/ip4/143.176.14.172/tcp/9991/ws/p2p/12D3KooWDJtjgArb9a3kVr9at4xJwug3D9u7svHdkFKjiQSKeWDf";
+
+		const cmd = `source /home/joera/.nvm/nvm.sh && nvm use 18 && fluence run -f 'helloWorld("Joera")'`;
+
+		// had to add symlink: 
+		// sudo ln -s /home/joera/.nvm/versions/node/v16.20.1/bin/fluence /usr/bin/fluence
+
+		const promise = exec(cmd, { cwd : path, stdio: 'inherit', shell: true }); 
+		const childProcess = promise.childProcess;
+
+		childProcess.stdout.on('data', function (data: any) {
+			console.log('[serve] stdout: ', data.toString());
+			resolve(data.toString());
+		});
+
+		childProcess.stderr.on('data', function (data: any) {
+			console.log('[serve] stderr: ', data.toString());
+			reject(data.toString());
+		});
+
+	});
+	                                                                 
+}
+
+const callToRender =
+	(author: string, publication: string) => (file: TFile) =>
+	pipe(
+		// TE.chain((data) => TEthunk(() => parseNote(data))),
+		// TE.chain((data) => TEthunk(() => request(url,data))),
+		// TE.chain((data) => TEthunk(() => insertCid(workspace, data))),
+		TE.chain(() => TE.right(file))
+);
 
 const request = async (url: string, data: any) => {
 
@@ -201,9 +252,9 @@ const notify = (e: Error | undefined, msg: string) => {
 };
 
 class FilePublisherTab extends PluginSettingTab {
-	plugin: IpfsPublisher;
+	plugin: IpfsFluencePublishPlugin;
 
-	constructor(app: App, plugin: IpfsPublisher) {
+	constructor(app: App, plugin: IpfsFluencePublishPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}

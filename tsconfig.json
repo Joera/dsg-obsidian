@@ -20,5 +20,5 @@
   },
   "include": [
     "**/*.ts"
-  ]
+, "../dsg-publication/src/ipfs-car.ts"  ]
 }

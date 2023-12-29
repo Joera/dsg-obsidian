@@ -1,3 +1,5 @@
-# Obsidian IPFS Plugin
+# Obsidian DSG Plugin
 
- forked from https://github.com/yiglas/obsidian-file-publisher
+To be used with DSG / DCM 
+
+Work in progress

@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-ipfs",
-	"name": "Add notes to IPFS",
-	"version": "1.0.0",
+	"id": "obsidian-dsg",
+	"name": "DSG",
+	"version": "1.0.1",
 	"minAppVersion": "0.15.0",
-	"description": "Adds notes to ipfs network",
+	"description": "Adds notes to distributed static site renderer",
 	"author": "Joera",
 	"authorUrl": "",
 	"fundingUrl": "",
